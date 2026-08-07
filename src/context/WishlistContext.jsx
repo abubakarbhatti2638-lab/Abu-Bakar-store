@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const WishlistContext = createContext();
+export const WishlistContext = createContext();
 
 export const useWishlist = () => useContext(WishlistContext);
 
@@ -14,13 +14,12 @@ export const WishlistProvider = ({ children }) => {
     localStorage.setItem('shopsphere_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const toggleWishlist = (product) => {
+  const addToWishlist = (product) => {
     setWishlist(prev => {
-      const exists = prev.find(item => item.id === product.id);
-      if (exists) {
-        return prev.filter(item => item.id !== product.id);
+      if (!prev.find(item => item.id === product.id)) {
+        return [...prev, product];
       }
-      return [...prev, product];
+      return prev;
     });
   };
 
@@ -32,8 +31,10 @@ export const WishlistProvider = ({ children }) => {
     return wishlist.some(item => item.id === productId);
   };
 
+  const clearWishlist = () => setWishlist([]);
+
   return (
-    <WishlistContext.Provider value={{ wishlist, toggleWishlist, removeFromWishlist, isInWishlist }}>
+    <WishlistContext.Provider value={{ wishlist, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist, wishlistCount: wishlist.length }}>
       {children}
     </WishlistContext.Provider>
   );

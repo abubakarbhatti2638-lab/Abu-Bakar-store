@@ -10,9 +10,22 @@ export const CartProvider = ({ children }) => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
+  const [coupon, setCoupon] = useState(() => {
+    const savedCoupon = localStorage.getItem('shopsphere_coupon');
+    return savedCoupon ? JSON.parse(savedCoupon) : null;
+  });
+
   useEffect(() => {
     localStorage.setItem('shopsphere_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    if (coupon) {
+      localStorage.setItem('shopsphere_coupon', JSON.stringify(coupon));
+    } else {
+      localStorage.removeItem('shopsphere_coupon');
+    }
+  }, [coupon]);
 
   const addToCart = (product, quantity = 1) => {
     setCart(prevCart => {
@@ -42,13 +55,40 @@ export const CartProvider = ({ children }) => {
     ));
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    setCoupon(null);
+  };
 
-  const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const applyCoupon = (code) => {
+    const validCoupons = {
+      'SAVE10': 0.10,
+      'SAVE20': 0.20
+    };
+
+    if (validCoupons[code.toUpperCase()]) {
+      setCoupon({ code: code.toUpperCase(), discount: validCoupons[code.toUpperCase()] });
+      return { success: true, message: `Coupon applied: ${validCoupons[code.toUpperCase()] * 100}% off` };
+    }
+    return { success: false, message: 'Invalid coupon code' };
+  };
+
+  const removeCoupon = () => setCoupon(null);
+
+  const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const discountAmount = coupon ? subtotal * coupon.discount : 0;
+  const shipping = cart.length > 0 ? (subtotal > 100 ? 0 : 15) : 0; // Free shipping over $100
+  const tax = (subtotal - discountAmount) * 0.08; // 8% tax
+  const total = subtotal - discountAmount + shipping + tax;
+  
   const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, cartTotal, cartCount }}>
+    <CartContext.Provider value={{ 
+      cart, addToCart, removeFromCart, updateQuantity, clearCart, 
+      subtotal, discountAmount, shipping, tax, total, cartCount,
+      coupon, applyCoupon, removeCoupon 
+    }}>
       {children}
     </CartContext.Provider>
   );

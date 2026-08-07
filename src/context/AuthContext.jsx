@@ -13,31 +13,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      if (user && user.token) {
-        try {
-          const res = await fetch('/api/auth/me', {
-            headers: {
-              Authorization: `Bearer ${user.token}`
-            }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            // Update user with fresh data but keep token
-            setUser({ ...data, token: user.token });
-          } else {
-            // Token invalid or expired
-            localStorage.removeItem('shopsphere_user');
-            setUser(null);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user', error);
-        }
-      }
+    // Simulate initial load/verification
+    setTimeout(() => {
       setLoading(false);
-    };
-
-    fetchUser();
+    }, 300);
   }, []);
 
   useEffect(() => {
@@ -49,41 +28,69 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   const login = async (email, password) => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Login failed');
+    // Dummy validation
+    if (!email || !password) {
+      throw new Error('Please enter email and password');
     }
-    setUser(data);
-    return data;
+    
+    if (password.length < 6) {
+      throw new Error('Invalid credentials');
+    }
+
+    const dummyUser = {
+      id: 'usr_' + Math.random().toString(36).substr(2, 9),
+      name: email.split('@')[0] || 'User',
+      email: email,
+      token: 'demo-token-' + Date.now()
+    };
+    
+    setUser(dummyUser);
+    return dummyUser;
   };
 
   const register = async (name, email, password, phone) => {
-    const res = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password, phone })
-    });
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 800));
     
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || 'Registration failed');
+    if (!name || !email || !password) {
+      throw new Error('Please fill in all required fields');
     }
-    setUser(data);
-    return data;
+    
+    if (password.length < 6) {
+      throw new Error('Password must be at least 6 characters');
+    }
+
+    const dummyUser = {
+      id: 'usr_' + Math.random().toString(36).substr(2, 9),
+      name: name,
+      email: email,
+      phone: phone || '',
+      token: 'demo-token-' + Date.now()
+    };
+    
+    setUser(dummyUser);
+    return dummyUser;
   };
 
   const logout = () => {
     setUser(null);
   };
 
+  const updateProfile = async (updatedData) => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (user) {
+      const newUser = { ...user, ...updatedData };
+      setUser(newUser);
+      return newUser;
+    }
+    throw new Error('No user logged in');
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, isAuthenticated: !!user, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
