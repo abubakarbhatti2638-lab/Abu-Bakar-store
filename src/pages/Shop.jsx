@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
+import { products as dummyProducts } from '../data/products';
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -7,20 +8,12 @@ const Shop = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch('/api/products');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        setProducts(data);
+    // Simulate network request
+    const fetchProducts = () => {
+      setTimeout(() => {
+        setProducts(dummyProducts);
         setLoading(false);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setError("Failed to load products. Is the backend running?");
-        setLoading(false);
-      }
+      }, 500);
     };
 
     fetchProducts();
@@ -54,7 +47,7 @@ const Shop = () => {
           gap: '30px' 
         }}>
           {products.map(product => (
-            <ProductCard key={product._id} product={product} />
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       )}
